@@ -76,6 +76,8 @@ AggregateIPFlows::AggregateIPFlows()
     : _traceinfo_file(0), _packet_source(0), _filepos_h(0)
 #endif
 {
+    _id = 0;
+    _fixbits = 0;
 }
 
 AggregateIPFlows::~AggregateIPFlows()
@@ -118,6 +120,8 @@ AggregateIPFlows::configure(Vector<String> &conf, ErrorHandler *errh)
 	.read("SOURCE", ElementArg(), _packet_source)
 #endif
 	.read("FRAGMENTS", fragments).read_status(fragments_parsed)
+	.read("ID", _id)
+	.read("FIXBITS", _fixbits)
 	.complete() < 0)
 	return -1;
 
@@ -529,8 +533,14 @@ AggregateIPFlows::handle_packet(Packet *p)
     if (finfo->reverse())
         paint ^= 1;
 
+    uint32_t aggId;
+    if (_id > 0 && _fixbits > 0)
+        aggId = (_id << (32 - _fixbits)) | finfo->aggregate();
+    else
+        aggId = finfo->aggregate();
+
     // set aggregate annotations
-    SET_AGGREGATE_ANNO(p, finfo->aggregate());
+    SET_AGGREGATE_ANNO(p, aggId);
     SET_PAINT_ANNO(p, paint);
     } else {
         finfo = 0;

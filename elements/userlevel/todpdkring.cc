@@ -27,7 +27,7 @@ ToDPDKRing::ToDPDKRing() :
     _iqueue(),
     _internal_tx_queue_size(1024),
      _timeout(0),
-    _blocking(false), _congestion_warning_printed(false),
+    _blocking(false), _congestion_warning_printed(false), _metadata(false),
     _dropped(0)
 {
     _ndesc = DPDKDevice::DEF_RING_NDESC;
@@ -47,6 +47,7 @@ ToDPDKRing::configure(Vector<String> &conf, ErrorHandler *errh)
     if (args
         .read("IQUEUE",       _internal_tx_queue_size)
         .read("BLOCKING",     _blocking)
+        .read("METADATA",     _metadata)
         .read("TIMEOUT",      _timeout)
         .complete() < 0)
             return -1;
@@ -258,6 +259,11 @@ ToDPDKRing::push(int, Packet *p)
         else {
             struct rte_mbuf *mbuf = DPDKDevice::get_mbuf(p, true, _numa_zone);
             if ( mbuf != NULL ) {
+                if (_metadata)
+                    mbuf->userdata = (void*)(uintptr_t) AGGREGATE_ANNO(p);
+                else
+                    mbuf->userdata = NULL;
+
                 iqueue.pkts[(iqueue.index + iqueue.nr_pending) % _internal_tx_queue_size] = mbuf;
                 iqueue.nr_pending++;
             }
@@ -307,6 +313,11 @@ ToDPDKRing::push_batch(int, PacketBatch *head)
         while ( iqueue.nr_pending < _internal_tx_queue_size && p ) {
             struct rte_mbuf *mbuf = DPDKDevice::get_mbuf(p, true, _numa_zone);
             if ( mbuf != NULL ) {
+                if (_metadata)
+                    mbuf->userdata = (void*)(uintptr_t) AGGREGATE_ANNO(p);
+                else
+                    mbuf->userdata = NULL;
+
                 iqueue.pkts[(iqueue.index + iqueue.nr_pending) % _internal_tx_queue_size] = mbuf;
                 iqueue.nr_pending++;
             }

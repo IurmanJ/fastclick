@@ -225,6 +225,9 @@ class AggregateIPFlows : public BatchElement, public AggregateNotifier { public:
     uint32_t _udp_timeout;
     uint32_t _smallest_timeout;
 
+    uint32_t _id;
+    uint32_t _fixbits;
+
     unsigned _gc_interval;
     unsigned _fragment_timeout;
 

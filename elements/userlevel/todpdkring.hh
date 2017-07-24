@@ -90,6 +90,11 @@ Integer. Number of descriptors per ring. The default is 1024.
 
 Integer. The NUMA memory zone (or CPU socket ID) where we allocate resources.
 
+=item METADATA
+
+Boolean. If true, some meta data are passed within the mbuf structure 
+(eg. flow id). If false, no meta data are passed. Defaults to false.
+
 =back
 
 This element is only available at user level, when compiled with DPDK support.
@@ -167,6 +172,7 @@ class ToDPDKRing : public BatchElement, DPDKRing {
         short        _timeout;
         bool         _blocking;
         bool         _congestion_warning_printed;
+        bool         _metadata;
 
         counter_t _dropped;
 
